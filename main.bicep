@@ -4,6 +4,10 @@ extension microsoftGraphV1
 @description('The name of the Log Analytics workspace')
 param workspaceName string = 'law-${uniqueString(resourceGroup().id)}'
 
+@secure()
+@description('The API token for RealmJoin notification (optional)')
+param realmJoinApiToken string = ''
+
 // Variables
 var realmJoinAzureResourcesServicePrincipalId = 'fd16fa73-df36-4809-8676-05108225827b'
 
@@ -17,6 +21,7 @@ module logIngestion 'modules/logAnalyticsWorkspace.bicep' = {
   params: {
     workspaceName: workspaceName
     servicePrincipalId: realmJoinAzureResourcesServicePrincipal.id
+    realmJoinApiToken: realmJoinApiToken
   }
 }
 
