@@ -1,7 +1,12 @@
 @description('The name of the Log Analytics workspace')
 param workspaceName string
 
+@description('The principal ID of the service principal to grant permissions')
+param servicePrincipalId string
+
 var dcrName = 'dcr-auditlogs-${uniqueString(resourceGroup().id)}'
+var monitoringMetricsPublisherRoleId = '3913510d-42f4-4e42-8a64-420c390055eb'
+var logAnalyticsContributorRoleId = '92aaf0da-9dab-42b6-94a3-d43ce8d16293'
 var tableName = 'RJAuditLogs_CL'
 var streamName = 'Custom-${tableName}'
 var logsDestinationName = 'RJLogAnalyticsDestination'
@@ -119,6 +124,28 @@ resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' 
         outputStream: streamName
       }
     ]
+  }
+}
+
+// Role Assignment: Service Principal -> Log Analytics Contributor -> Workspace
+resource spToWorkspaceRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(logAnalyticsWorkspace.id, servicePrincipalId, logAnalyticsContributorRoleId)
+  scope: logAnalyticsWorkspace
+  properties: {
+    principalId: servicePrincipalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', logAnalyticsContributorRoleId)
+  }
+}
+
+// Role Assignment: Service Principal -> Monitoring Metrics Publisher -> DCR
+resource spToDcrRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(dataCollectionRule.id, servicePrincipalId, monitoringMetricsPublisherRoleId)
+  scope: dataCollectionRule
+  properties: {
+    principalId: servicePrincipalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', monitoringMetricsPublisherRoleId)
   }
 }
 
