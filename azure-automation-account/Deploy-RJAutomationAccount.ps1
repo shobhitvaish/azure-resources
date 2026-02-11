@@ -6,8 +6,8 @@
     This script orchestrates the deployment of RealmJoin Automation Account infrastructure.
     Bicep templates are downloaded from GitHub at runtime - no additional files needed.
     
-    Designed for Azure Cloud Shell. The script automatically acquires Graph API tokens
-    required by the Bicep Microsoft Graph extension.
+    Uses device code authentication to ensure proper consent for Bicep Microsoft Graph 
+    extension operations.
 
     Prerequisites:
     - Azure PowerShell module (Az)
@@ -134,10 +134,10 @@ try {
     Write-Information "RealmJoin Automation Account Deployment"
     Write-Information "========================================`n"
 
-    # Acquire Graph API token for Bicep Microsoft Graph extension
-    # This is required in Azure Cloud Shell to switch from the portal's app identity to Azure CLI's app identity
-    # Write-Verbose "Acquiring Graph API token for Bicep deployments..."
-    # az login --scope https://graph.microsoft.com/.default 2>&1 | Out-Null
+    # Authenticate with device code flow for Graph API permissions
+    # This ensures proper consent for Bicep Microsoft Graph extension operations
+    Write-Information "Authenticating with Azure (device code flow)..."
+    Connect-AzAccount -UseDeviceAuthentication | Out-Null
 
     # Download templates from GitHub
     Write-Verbose "Downloading Bicep templates..."
