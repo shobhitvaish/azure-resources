@@ -53,7 +53,7 @@ $ErrorActionPreference = "Stop"
 $InformationPreference = "Continue"
 
 # Configuration - GitHub raw content URL (update this to your repo)
-$GitHubBaseUrl = "https://raw.githubusercontent.com/realmjoin/yourrepo/main"
+$GitHubBaseUrl = "https://raw.githubusercontent.com/shobhitvaish/azure-resources/main"
 
 # Create temp directory for downloaded templates
 $TempPath = Join-Path ([System.IO.Path]::GetTempPath()) "rj-deploy-$([guid]::NewGuid().ToString('N').Substring(0,8))"
