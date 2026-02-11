@@ -137,7 +137,7 @@ try {
     # Acquire Graph API token for Bicep Microsoft Graph extension
     # This is required in Azure Cloud Shell to switch from the portal's app identity to Azure CLI's app identity
     Write-Verbose "Acquiring Graph API token for Bicep deployments..."
-    az login --scope https://graph.microsoft.com/.default
+    az login --scope https://graph.microsoft.com/.default 2>&1 | Out-Null
 
     # Download templates from GitHub
     Write-Verbose "Downloading Bicep templates..."
