@@ -1,12 +1,8 @@
 @description('The name of the Log Analytics workspace')
-param workspaceName string
+param workspaceName string = 'law-${uniqueString(resourceGroup().id)}'
 
 @description('The principal ID of the service principal to grant permissions')
 param servicePrincipalId string
-
-@secure()
-@description('The API token for RealmJoin notification (optional)')
-param realmJoinApiToken string = ''
 
 var dcrName = 'dcr-auditlogs-${uniqueString(resourceGroup().id)}'
 var monitoringMetricsPublisherRoleId = '3913510d-42f4-4e42-8a64-420c390055eb'
@@ -153,29 +149,8 @@ resource spToDcrRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-// RealmJoin Notification (conditional)
-module realmJoinNotification 'realmJoinNotification.bicep' = if (!empty(realmJoinApiToken)) {
-  name: 'realmJoinNotification'
-  params: {
-    apiUrl: 'https://api.realmjoin.com/v1/workspace-registration'
-    authToken: realmJoinApiToken
-    payloadJson: string({
-      tenantId: tenant().tenantId
-      subscriptionId: subscription().subscriptionId
-      resourceGroupName: resourceGroup().name
-      workspaceName: workspaceName
-      workspaceId: logAnalyticsWorkspace.id
-      customerId: logAnalyticsWorkspace.properties.customerId
-      tableName: auditLogsTable.name
-      dcrImmutableId: dataCollectionRule.properties.immutableId
-      logsIngestionEndpoint: dataCollectionRule.properties.endpoints.logsIngestion
-    })
-  }
-  dependsOn: [
-    spToWorkspaceRole
-    spToDcrRole
-  ]
-}
+@description('The name of the Log Analytics workspace')
+output workspaceName string = logAnalyticsWorkspace.name
 
 @description('The resource ID of the Log Analytics workspace')
 output workspaceId string = logAnalyticsWorkspace.id
