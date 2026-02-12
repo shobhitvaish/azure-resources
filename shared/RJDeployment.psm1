@@ -28,7 +28,9 @@ function Wait-ServicePrincipalReplication {
         }
 
         try {
-            $sp = Get-AzADServicePrincipal -ObjectId $ServicePrincipalId -ErrorAction Stop -Verbose -Debug
+            $sp = Get-AzADServicePrincipal -ObjectId $ServicePrincipalId -ErrorAction Stop `
+                -Verbose:($VerbosePreference -eq 'Continue') `
+                -Debug:($DebugPreference -eq 'Continue')
             if ($sp) {
                 Write-Verbose "  Service principal replicated successfully."
                 return $true
@@ -73,8 +75,8 @@ function Deploy-BicepTemplate {
         -Name $DeploymentName `
         -TemplateFile $TemplatePath `
         -TemplateParameterObject $Parameters `
-        -Verbose
-        -Debug
+        -Verbose:($VerbosePreference -eq 'Continue') `
+        -Debug:($DebugPreference -eq 'Continue')
 
     Write-Verbose "  Deployment succeeded."
     return $deployment.Outputs
@@ -140,7 +142,9 @@ function Initialize-RJDeployment {
 
     # Authenticate with device code flow
     Write-Information "Authenticating..."
-    Connect-AzAccount -UseDeviceAuthentication -Verbose -Debug
+    Connect-AzAccount -UseDeviceAuthentication `
+        -Verbose:($VerbosePreference -eq 'Continue') `
+        -Debug:($DebugPreference -eq 'Continue')
 
     # Download templates
     Write-Verbose "Downloading Bicep templates..."
