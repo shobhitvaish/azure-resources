@@ -55,11 +55,7 @@ $InformationPreference = "Continue"
 # Configuration - GitHub raw content URL (update this to your repo)
 $GitHubBaseUrl = "https://raw.githubusercontent.com/shobhitvaish/azure-resources/main"
 
-# Create temp directory for downloaded templates
-$TempPath = Join-Path ([System.IO.Path]::GetTempPath()) "rj-deploy-$([guid]::NewGuid().ToString('N').Substring(0,8))"
-New-Item -ItemType Directory -Path $TempPath -Force | Out-Null
-
-# Templates to download
+# Templates to download (excluding module - downloaded separately for bootstrapping)
 $Templates = @(
     @{ Remote = "realmJoinServicePrincipal.bicep"; Local = "realmJoinServicePrincipal.bicep" },
     @{ Remote = "azure-automation-account/automationAccount.bicep"; Local = "automationAccount.bicep" },
@@ -68,65 +64,11 @@ $Templates = @(
     @{ Remote = "bicepconfig.json"; Local = "bicepconfig.json" }
 )
 
-function Wait-ServicePrincipalReplication {
-    <#
-    .SYNOPSIS
-        Waits for a service principal to replicate across Azure AD with exponential backoff.
-    #>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$ServicePrincipalId,
-
-        [Parameter(Mandatory = $false)]
-        [int]$MaxAttempts = 4,
-
-        [Parameter(Mandatory = $false)]
-        [int]$BaseDelaySeconds = 8
-    )
-
-    Write-Verbose "Waiting for service principal '$ServicePrincipalId' to replicate..."
-
-    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
-        if ($attempt -gt 1) {
-            $delay = $BaseDelaySeconds * [math]::Pow(2, $attempt - 2)  # 8, 16, 32
-            Write-Verbose "  Attempt $attempt/$MaxAttempts - Waiting $delay seconds..."
-            Start-Sleep -Seconds $delay
-        }
-
-        try {
-            $sp = Get-AzADServicePrincipal -ObjectId $ServicePrincipalId -ErrorAction Stop
-            if ($sp) {
-                Write-Verbose "  Service principal replicated successfully."
-                return $true
-            }
-        }
-        catch {
-            if ($attempt -eq $MaxAttempts) {
-                Write-Warning "Service principal not found after $MaxAttempts attempts. Proceeding anyway..."
-                return $false
-            }
-            Write-Verbose "  Service principal not yet available. Retrying..."
-        }
-    }
-
-    return $false
-}
-
-function Deploy-BicepTemplate {
-    param(
-        [string]$TemplatePath,
-        [string]$DeploymentName,
-        [hashtable]$Parameters = @{}
-    )
-
-    Write-Verbose "Deploying '$DeploymentName'..."
-
-    $deployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $DeploymentName -TemplateFile $TemplatePath -TemplateParameterObject $Parameters
-
-    Write-Verbose "  Deployment succeeded."
-    return $deployment.Outputs
-}
+# Bootstrap: Create temp directory and download shared module
+$TempPath = Join-Path ([System.IO.Path]::GetTempPath()) "rj-deploy-$([guid]::NewGuid().ToString('N').Substring(0,8))"
+New-Item -ItemType Directory -Path $TempPath -Force | Out-Null
+Invoke-WebRequest -Uri "$GitHubBaseUrl/shared/RJDeployment.psm1" -OutFile (Join-Path $TempPath "RJDeployment.psm1")
+Import-Module (Join-Path $TempPath "RJDeployment.psm1") -Force
 
 # Main execution
 try {
@@ -134,17 +76,8 @@ try {
     Write-Information "RealmJoin Automation Account Deployment"
     Write-Information "========================================`n"
 
-    # Authenticate with device code flow for Graph API permissions
-    # This ensures proper consent for Bicep Microsoft Graph extension operations
-    Write-Information "Authenticating with Azure (device code flow)..."
-    Connect-AzAccount -UseDeviceAuthentication | Out-Null
-
-    # Download templates from GitHub
-    Write-Verbose "Downloading Bicep templates..."
-    foreach ($t in $Templates) {
-        Write-Verbose "  $($t.Remote)"
-        Invoke-WebRequest -Uri "$GitHubBaseUrl/$($t.Remote)" -OutFile (Join-Path $TempPath $t.Local)
-    }
+    # Initialize deployment (auth + download templates)
+    Initialize-RJDeployment -GitHubBaseUrl $GitHubBaseUrl -Templates $Templates -TempPath $TempPath | Out-Null
 
     # Verify resource group exists
     Write-Verbose "Verifying resource group '$ResourceGroupName' exists..."
@@ -153,7 +86,7 @@ try {
 
     # Step 1: Deploy RealmJoin Service Principal template
     Write-Information "`n--- Step 1: RealmJoin Service Principal ---"
-    $step1Outputs = Deploy-BicepTemplate -TemplatePath (Join-Path $TempPath "realmJoinServicePrincipal.bicep") -DeploymentName "rj-serviceprincipal-$(Get-Date -Format 'yyyyMMddHHmmss')"
+    $step1Outputs = Deploy-BicepTemplate -ResourceGroupName $ResourceGroupName -TemplatePath (Join-Path $TempPath "realmJoinServicePrincipal.bicep") -DeploymentName "rj-serviceprincipal-$(Get-Date -Format 'yyyyMMddHHmmss')"
 
     $rjServicePrincipalId = $step1Outputs["servicePrincipalId"].Value
     Write-Verbose "  RJ Service Principal ID: $rjServicePrincipalId"
@@ -169,7 +102,7 @@ try {
     if ($AutomationAccountName) {
         $step2Params.automationAccountName = $AutomationAccountName
     }
-    $step2Outputs = Deploy-BicepTemplate -TemplatePath (Join-Path $TempPath "automationAccount.bicep") -DeploymentName "rj-automationaccount-$(Get-Date -Format 'yyyyMMddHHmmss')" -Parameters $step2Params
+    $step2Outputs = Deploy-BicepTemplate -ResourceGroupName $ResourceGroupName -TemplatePath (Join-Path $TempPath "automationAccount.bicep") -DeploymentName "rj-automationaccount-$(Get-Date -Format 'yyyyMMddHHmmss')" -Parameters $step2Params
 
     $automationAccountId = $step2Outputs["automationAccountId"].Value
     $automationAccountPrincipalId = $step2Outputs["automationAccountPrincipalId"].Value
@@ -181,7 +114,7 @@ try {
 
     # Step 3: Deploy Permissions template
     Write-Information "`n--- Step 3: Permissions Assignment ---"
-    $step3Outputs = Deploy-BicepTemplate -TemplatePath (Join-Path $TempPath "rjAutomationAccountPermissions.bicep") -DeploymentName "rj-permissions-$(Get-Date -Format 'yyyyMMddHHmmss')" `
+    $step3Outputs = Deploy-BicepTemplate -ResourceGroupName $ResourceGroupName -TemplatePath (Join-Path $TempPath "rjAutomationAccountPermissions.bicep") -DeploymentName "rj-permissions-$(Get-Date -Format 'yyyyMMddHHmmss')" `
         -Parameters @{
             principalId = $automationAccountPrincipalId
         }
@@ -196,29 +129,11 @@ try {
     if ($RJApiUrl -and $RJApiToken) {
         Write-Information "`n--- Step 4: RealmJoin API Registration ---"
         
-        $rjPayload = @{
+        $payload = @{
             automationAccountResourceId = $automationAccountId
-        } | ConvertTo-Json
-
-        Write-Verbose "  Posting to RealmJoin API..."
-        
-        $headers = @{
-            "Authorization" = "Bearer $RJApiToken"
-            "Content-Type"  = "application/json"
         }
 
-        try {
-            $response = Invoke-RestMethod -Uri $RJApiUrl -Method Post -Headers $headers -Body $rjPayload
-
-            Write-Information "  API registration successful."
-            if ($response) {
-                Write-Verbose "  Response: $($response | ConvertTo-Json -Compress)"
-            }
-        }
-        catch {
-            Write-Warning "Failed to register with RealmJoin API: $($_.Exception.Message)"
-            Write-Warning "You may need to manually register the Automation Account."
-        }
+        Invoke-RJApiRegistration -ApiUrl $RJApiUrl -ApiToken $RJApiToken -Payload $payload
     }
     else {
         Write-Information "`n--- Step 4: RealmJoin API Registration (Skipped) ---"
