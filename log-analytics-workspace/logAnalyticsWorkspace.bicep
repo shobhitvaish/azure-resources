@@ -46,15 +46,51 @@ resource auditLogsTable 'Microsoft.OperationalInsights/workspaces/tables@2025-07
           type: 'String'
         }
         {
+          name: 'Category'
+          type: 'String'
+        }
+        {
           name: 'LogType'
           type: 'String'
         }
         {
-          name: 'Actor'
+          name: 'Subject'
           type: 'Dynamic'
         }
         {
           name: 'Target'
+          type: 'Dynamic'
+        }
+        {
+          name: 'Change'
+          type: 'Dynamic'
+        }
+        {
+          name: 'Context'
+          type: 'Dynamic'
+        }
+        {
+          name: 'UserName'
+          type: 'String'
+        }
+        {
+          name: 'UserId'
+          type: 'String'
+        }
+        {
+          name: 'SourceContext'
+          type: 'String'
+        }
+        {
+          name: 'RequestId'
+          type: 'String'
+        }
+        {
+          name: 'EnvironmentName'
+          type: 'String'
+        }
+        {
+          name: 'Diagnostics'
           type: 'Dynamic'
         }
       ]
@@ -95,15 +131,51 @@ resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' 
             type: 'string'
           }
           {
+            name: 'Category'
+            type: 'string'
+          }
+          {
             name: 'LogType'
             type: 'string'
           }
           {
-            name: 'Actor'
+            name: 'Subject'
             type: 'dynamic'
           }
           {
             name: 'Target'
+            type: 'dynamic'
+          }
+          {
+            name: 'Change'
+            type: 'dynamic'
+          }
+          {
+            name: 'Context'
+            type: 'dynamic'
+          }
+          {
+            name: 'UserName'
+            type: 'string'
+          }
+          {
+            name: 'UserId'
+            type: 'string'
+          }
+          {
+            name: 'SourceContext'
+            type: 'string'
+          }
+          {
+            name: 'RequestId'
+            type: 'string'
+          }
+          {
+            name: 'EnvironmentName'
+            type: 'string'
+          }
+          {
+            name: 'Diagnostics'
             type: 'dynamic'
           }
         ]
@@ -160,6 +232,9 @@ output customerId string = logAnalyticsWorkspace.properties.customerId
 
 @description('The name of the custom table')
 output tableName string = auditLogsTable.name
+
+@description('The stream name for the DCR')
+output streamName string = streamName
 
 @description('The logs ingestion endpoint URL from the DCR')
 output logsIngestionEndpoint string = dataCollectionRule.properties.endpoints.logsIngestion

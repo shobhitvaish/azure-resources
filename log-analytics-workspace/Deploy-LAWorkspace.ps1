@@ -106,6 +106,7 @@ try {
     $workspaceId = $step2Outputs["workspaceId"].Value
     $customerId = $step2Outputs["customerId"].Value
     $tableName = $step2Outputs["tableName"].Value
+    $streamName = $step2Outputs["streamName"].Value
     $logsIngestionEndpoint = $step2Outputs["logsIngestionEndpoint"].Value
     $dcrImmutableId = $step2Outputs["dcrImmutableId"].Value
     $dcrId = $step2Outputs["dcrId"].Value
@@ -128,6 +129,7 @@ try {
             workspaceId           = $workspaceId
             customerId            = $customerId
             tableName             = $tableName
+            streamName            = $streamName
             dcrImmutableId        = $dcrImmutableId
             logsIngestionEndpoint = $logsIngestionEndpoint
         }
