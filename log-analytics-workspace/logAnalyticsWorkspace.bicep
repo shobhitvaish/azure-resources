@@ -13,6 +13,15 @@ param deployRunbookLogsDCR bool = false
 var uniqueId = uniqueString(resourceGroup().id)
 var logAnalyticsContributorRoleId = '92aaf0da-9dab-42b6-94a3-d43ce8d16293'
 
+// Table and DCR names
+var auditLogsTableName = 'RJAuditLogs_CL'
+var auditLogsStreamName = 'Custom-${auditLogsTableName}'
+var auditLogsDcrName = 'dcr-auditlogs-${uniqueId}'
+
+var runbookLogsTableName = 'RJRunbookLogs_CL'
+var runbookLogsStreamName = 'Custom-${runbookLogsTableName}'
+var runbookLogsDcrName = 'dcr-runbooklogs-${uniqueId}'
+
 // Audit Logs Schema
 var auditLogsColumns = [
   { name: 'TimeGenerated', type: 'datetime' }
@@ -84,9 +93,9 @@ module auditLogsDcr 'modules/customTableDcr.bicep' = if (deployAuditLogsDCR) {
   name: 'auditLogsDcr'
   params: {
     workspaceName: logAnalyticsWorkspace.name
-    tableName: 'RJAuditLogs_CL'
-    dcrName: 'dcr-auditlogs-${uniqueId}'
-    streamName: 'Custom-RJAuditLogs_CL'
+    tableName: auditLogsTableName
+    dcrName: auditLogsDcrName
+    streamName: auditLogsStreamName
     columns: auditLogsColumns
     servicePrincipalId: servicePrincipalId
     location: resourceGroup().location
@@ -98,9 +107,9 @@ module runbookLogsDcr 'modules/customTableDcr.bicep' = if (deployRunbookLogsDCR)
   name: 'runbookLogsDcr'
   params: {
     workspaceName: logAnalyticsWorkspace.name
-    tableName: 'RJRunbookLogs_CL'
-    dcrName: 'dcr-runbooklogs-${uniqueId}'
-    streamName: 'Custom-RJRunbookLogs_CL'
+    tableName: runbookLogsTableName
+    dcrName: runbookLogsDcrName
+    streamName: runbookLogsStreamName
     columns: runbookLogsColumns
     servicePrincipalId: servicePrincipalId
     location: resourceGroup().location
@@ -118,10 +127,10 @@ output customerId string = logAnalyticsWorkspace.properties.customerId
 
 // Audit Logs DCR Outputs
 @description('The name of the audit logs custom table')
-output tableName string = deployAuditLogsDCR ? 'RJAuditLogs_CL' : ''
+output tableName string = deployAuditLogsDCR ? auditLogsTableName : ''
 
 @description('The stream name for the audit logs DCR')
-output streamName string = 'Custom-RJAuditLogs_CL'
+output streamName string = auditLogsStreamName
 
 @description('The logs ingestion endpoint URL from the audit logs DCR')
 output logsIngestionEndpoint string = deployAuditLogsDCR ? auditLogsDcr!.outputs.logsIngestionEndpoint : ''
@@ -134,10 +143,10 @@ output dcrId string = deployAuditLogsDCR ? auditLogsDcr!.outputs.dcrId : ''
 
 // Runbook Logs DCR Outputs
 @description('The name of the runbook logs custom table')
-output runbookLogsTableName string = deployRunbookLogsDCR ? 'RJRunbookLogs_CL' : ''
+output runbookLogsTableName string = deployRunbookLogsDCR ? runbookLogsTableName : ''
 
 @description('The stream name for the runbook logs DCR')
-output runbookLogsStreamName string = 'Custom-RJRunbookLogs_CL'
+output runbookLogsStreamName string = runbookLogsStreamName
 
 @description('The logs ingestion endpoint URL from the runbook logs DCR')
 output runbookLogsIngestionEndpoint string = deployRunbookLogsDCR ? runbookLogsDcr!.outputs.logsIngestionEndpoint : ''
