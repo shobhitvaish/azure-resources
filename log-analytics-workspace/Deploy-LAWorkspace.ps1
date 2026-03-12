@@ -21,6 +21,12 @@
 .PARAMETER WorkspaceName
     Optional. The name of the Log Analytics Workspace. If not provided, a unique name is generated.
 
+.PARAMETER DeployAuditLogsDCR
+    Optional. Whether to deploy the audit logs DCR and custom table. Default is $true.
+
+.PARAMETER DeployRunbookLogsDCR
+    Optional. Whether to deploy the runbook logs DCR and custom table. Default is $false.
+
 .PARAMETER RJApiUrl
     Optional. The RealmJoin API endpoint URL. If not provided, API registration is skipped.
 
@@ -32,6 +38,9 @@
 
 .EXAMPLE
     ./Deploy-LAWorkspace.ps1 -ResourceGroupName "rg-realmjoin" -WorkspaceName "la-rj-auditlogs" -RJApiUrl "https://api.realmjoin.com/..." -RJApiToken "your-token"
+
+.EXAMPLE
+    ./Deploy-LAWorkspace.ps1 -ResourceGroupName "rg-realmjoin" -DeployAuditLogsDCR $true -DeployRunbookLogsDCR $true
 #>
 
 [CmdletBinding()]
@@ -41,6 +50,12 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$WorkspaceName = "",
+
+    [Parameter(Mandatory = $false)]
+    [bool]$DeployAuditLogsDCR = $true,
+
+    [Parameter(Mandatory = $false)]
+    [bool]$DeployRunbookLogsDCR = $false,
 
     [Parameter(Mandatory = $false)]
     [string]$RJApiUrl = "",
@@ -59,6 +74,7 @@ $GitHubBaseUrl = "https://raw.githubusercontent.com/shobhitvaish/azure-resources
 $Templates = @(
     @{ Remote = "realmJoinServicePrincipal.bicep"; Local = "realmJoinServicePrincipal.bicep" },
     @{ Remote = "log-analytics-workspace/logAnalyticsWorkspace.bicep"; Local = "logAnalyticsWorkspace.bicep" },
+    @{ Remote = "log-analytics-workspace/modules/customTableDcr.bicep"; Local = "modules/customTableDcr.bicep" },
     @{ Remote = "bicepconfig.json"; Local = "bicepconfig.json" }
 )
 
@@ -96,6 +112,8 @@ try {
     Write-Information "`n--- Step 2: Log Analytics Workspace ---"
     $step2Params = @{
         servicePrincipalId = $rjServicePrincipalId
+        deployAuditLogsDCR = $DeployAuditLogsDCR
+        deployRunbookLogsDCR = $DeployRunbookLogsDCR
     }
     if ($WorkspaceName) {
         $step2Params.workspaceName = $WorkspaceName
@@ -105,17 +123,33 @@ try {
     $workspaceName = $step2Outputs["workspaceName"].Value
     $workspaceId = $step2Outputs["workspaceId"].Value
     $customerId = $step2Outputs["customerId"].Value
+    
+    # Audit Logs DCR outputs (conditional)
     $tableName = $step2Outputs["tableName"].Value
     $streamName = $step2Outputs["streamName"].Value
     $logsIngestionEndpoint = $step2Outputs["logsIngestionEndpoint"].Value
     $dcrImmutableId = $step2Outputs["dcrImmutableId"].Value
     $dcrId = $step2Outputs["dcrId"].Value
+    
+    # Runbook Logs DCR outputs (conditional)
+    $runbookLogsTableName = $step2Outputs["runbookLogsTableName"].Value
+    $runbookLogsStreamName = $step2Outputs["runbookLogsStreamName"].Value
+    $runbookLogsIngestionEndpoint = $step2Outputs["runbookLogsIngestionEndpoint"].Value
+    $runbookLogsDcrImmutableId = $step2Outputs["runbookLogsDcrImmutableId"].Value
+    $runbookLogsDcrId = $step2Outputs["runbookLogsDcrId"].Value
 
     Write-Verbose "  Workspace ID: $workspaceId"
     Write-Verbose "  Customer ID: $customerId"
-    Write-Verbose "  Table Name: $tableName"
-    Write-Verbose "  Logs Ingestion Endpoint: $logsIngestionEndpoint"
-    Write-Verbose "  DCR Immutable ID: $dcrImmutableId"
+    if ($DeployAuditLogsDCR) {
+        Write-Verbose "  Audit Logs Table Name: $tableName"
+        Write-Verbose "  Audit Logs Ingestion Endpoint: $logsIngestionEndpoint"
+        Write-Verbose "  Audit Logs DCR Immutable ID: $dcrImmutableId"
+    }
+    if ($DeployRunbookLogsDCR) {
+        Write-Verbose "  Runbook Logs Table Name: $runbookLogsTableName"
+        Write-Verbose "  Runbook Logs Ingestion Endpoint: $runbookLogsIngestionEndpoint"
+        Write-Verbose "  Runbook Logs DCR Immutable ID: $runbookLogsDcrImmutableId"
+    }
 
     # Step 3: Register with RealmJoin API (optional)
     if ($RJApiUrl -and $RJApiToken) {
@@ -128,10 +162,26 @@ try {
             workspaceName         = $workspaceName
             workspaceId           = $workspaceId
             customerId            = $customerId
-            tableName             = $tableName
-            streamName            = $streamName
-            dcrImmutableId        = $dcrImmutableId
-            logsIngestionEndpoint = $logsIngestionEndpoint
+        }
+        
+        # Add audit logs DCR info if deployed
+        if ($DeployAuditLogsDCR) {
+            $payload.auditLogs = @{
+                tableName             = $tableName
+                streamName            = $streamName
+                dcrImmutableId        = $dcrImmutableId
+                logsIngestionEndpoint = $logsIngestionEndpoint
+            }
+        }
+        
+        # Add runbook logs DCR info if deployed
+        if ($DeployRunbookLogsDCR) {
+            $payload.runbookLogs = @{
+                tableName             = $runbookLogsTableName
+                streamName            = $runbookLogsStreamName
+                dcrImmutableId        = $runbookLogsDcrImmutableId
+                logsIngestionEndpoint = $runbookLogsIngestionEndpoint
+            }
         }
 
         Invoke-RJApiRegistration -ApiUrl $RJApiUrl -ApiToken $RJApiToken -Payload $payload
@@ -147,10 +197,28 @@ try {
     Write-Information "Workspace Name: $workspaceName"
     Write-Information "Workspace ID: $workspaceId"
     Write-Information "Customer ID: $customerId"
-    Write-Information "Table Name: $tableName"
-    Write-Information "Logs Ingestion Endpoint: $logsIngestionEndpoint"
-    Write-Information "DCR Immutable ID: $dcrImmutableId"
     Write-Information ""
+    
+    if ($DeployAuditLogsDCR) {
+        Write-Information "--- Audit Logs DCR ---"
+        Write-Information "Table Name: $tableName"
+        Write-Information "Logs Ingestion Endpoint: $logsIngestionEndpoint"
+        Write-Information "DCR Immutable ID: $dcrImmutableId"
+        Write-Information ""
+    }
+    
+    if ($DeployRunbookLogsDCR) {
+        Write-Information "--- Runbook Logs DCR ---"
+        Write-Information "Table Name: $runbookLogsTableName"
+        Write-Information "Logs Ingestion Endpoint: $runbookLogsIngestionEndpoint"
+        Write-Information "DCR Immutable ID: $runbookLogsDcrImmutableId"
+        Write-Information ""
+    }
+    
+    if (-not $DeployAuditLogsDCR -and -not $DeployRunbookLogsDCR) {
+        Write-Information "Note: No DCRs were deployed (both deployAuditLogsDCR and deployRunbookLogsDCR are false)"
+        Write-Information ""
+    }
 
 }
 finally {
