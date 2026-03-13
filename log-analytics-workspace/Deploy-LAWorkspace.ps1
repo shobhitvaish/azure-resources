@@ -81,6 +81,7 @@ $Templates = @(
 # Bootstrap: Create temp directory and download shared module
 $TempPath = Join-Path ([System.IO.Path]::GetTempPath()) "rj-deploy-$([guid]::NewGuid().ToString('N').Substring(0,8))"
 New-Item -ItemType Directory -Path $TempPath -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $TempPath "modules") -Force | Out-Null
 Invoke-WebRequest -Uri "$GitHubBaseUrl/shared/RJDeployment.psm1" -OutFile (Join-Path $TempPath "RJDeployment.psm1")
 Import-Module (Join-Path $TempPath "RJDeployment.psm1") -Force
 
