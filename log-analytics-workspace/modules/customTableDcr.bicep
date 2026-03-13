@@ -71,6 +71,7 @@ resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' 
       {
         streams: [streamName]
         destinations: [logsDestinationName]
+        transformKql: 'source'
         outputStream: streamName
       }
     ]
