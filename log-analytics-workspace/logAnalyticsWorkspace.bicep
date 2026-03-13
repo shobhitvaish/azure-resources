@@ -22,8 +22,7 @@ var runbookLogsTableName = 'RJRunbookLogs_CL'
 var runbookLogsStreamName = 'Custom-${runbookLogsTableName}'
 var runbookLogsDcrName = 'dcr-runbooklogs-${uniqueId}'
 
-// Audit Logs Schema - Table (Pascal case for Log Analytics API)
-var auditLogsTableColumns = [
+var auditLogsColumns = [
   {
     name: 'TimeGenerated'
     type: 'DateTime'
@@ -94,80 +93,7 @@ var auditLogsTableColumns = [
   }
 ]
 
-// Audit Logs Schema - DCR Stream (lowercase for DCR API)
-var auditLogsDcrColumns = [
-  {
-    name: 'TimeGenerated'
-    type: 'datetime'
-  }
-  {
-    name: 'Level'
-    type: 'string'
-  }
-  {
-    name: 'Message'
-    type: 'string'
-  }
-  {
-    name: 'Exception'
-    type: 'string'
-  }
-  {
-    name: 'CustomerTenantId'
-    type: 'string'
-  }
-  {
-    name: 'Category'
-    type: 'string'
-  }
-  {
-    name: 'LogType'
-    type: 'string'
-  }
-  {
-    name: 'Subject'
-    type: 'dynamic'
-  }
-  {
-    name: 'Target'
-    type: 'dynamic'
-  }
-  {
-    name: 'Change'
-    type: 'dynamic'
-  }
-  {
-    name: 'Context'
-    type: 'dynamic'
-  }
-  {
-    name: 'UserName'
-    type: 'string'
-  }
-  {
-    name: 'UserId'
-    type: 'string'
-  }
-  {
-    name: 'SourceContext'
-    type: 'string'
-  }
-  {
-    name: 'RequestId'
-    type: 'string'
-  }
-  {
-    name: 'EnvironmentName'
-    type: 'string'
-  }
-  {
-    name: 'Diagnostics'
-    type: 'dynamic'
-  }
-]
-
-// Runbook Logs Schema - Table (Pascal case for Log Analytics API)
-var runbookLogsTableColumns = [
+var runbookLogsColumns = [
   {
     name: 'TimeGenerated'
     type: 'DateTime'
@@ -263,106 +189,6 @@ var runbookLogsTableColumns = [
   {
     name: 'JobType'
     type: 'String'
-  }
-]
-
-// Runbook Logs Schema - DCR Stream (lowercase for DCR API)
-var runbookLogsDcrColumns = [
-  {
-    name: 'TimeGenerated'
-    type: 'datetime'
-  }
-  {
-    name: 'JobCreationTime'
-    type: 'datetime'
-  }
-  {
-    name: 'JobEndTime'
-    type: 'datetime'
-  }
-  {
-    name: 'JobException'
-    type: 'string'
-  }
-  {
-    name: 'JobId'
-    type: 'string'
-  }
-  {
-    name: 'JobJobId'
-    type: 'string'
-  }
-  {
-    name: 'JobLastModifiedTime'
-    type: 'datetime'
-  }
-  {
-    name: 'JobLastStatusModifiedTime'
-    type: 'datetime'
-  }
-  {
-    name: 'JobNameGuid'
-    type: 'string'
-  }
-  {
-    name: 'JobName'
-    type: 'string'
-  }
-  {
-    name: 'JobOutput'
-    type: 'string'
-  }
-  {
-    name: 'JobParametersJson'
-    type: 'string'
-  }
-  {
-    name: 'JobPrettyCategory'
-    type: 'string'
-  }
-  {
-    name: 'JobPrettyName'
-    type: 'string'
-  }
-  {
-    name: 'JobPrettyType'
-    type: 'string'
-  }
-  {
-    name: 'JobProvisioningState'
-    type: 'string'
-  }
-  {
-    name: 'JobRunbookName'
-    type: 'string'
-  }
-  {
-    name: 'JobRunOn'
-    type: 'string'
-  }
-  {
-    name: 'JobStartedBy'
-    type: 'string'
-  }
-  {
-    name: 'JobStartTime'
-    type: 'datetime'
-  }
-  {
-    name: 'JobStatus'
-    type: 'string'
-  }
-  {
-    name: 'JobStatusDetails'
-    type: 'string'
-  }
-  {
-    name: 'JobStreamsJson'
-    type: 'string'
-  }
-  {
-    name: 'JobType'
-    type: 'string'
   }
 ]
 
@@ -391,8 +217,7 @@ module auditLogsDcr 'modules/customTableDcr.bicep' = if (deployAuditLogsDCR) {
     tableName: auditLogsTableName
     dcrName: auditLogsDcrName
     streamName: auditLogsStreamName
-    tableColumns: auditLogsTableColumns
-    dcrColumns: auditLogsDcrColumns
+    columns: auditLogsColumns
     servicePrincipalId: servicePrincipalId
     location: resourceGroup().location
   }
@@ -406,8 +231,7 @@ module runbookLogsDcr 'modules/customTableDcr.bicep' = if (deployRunbookLogsDCR)
     tableName: runbookLogsTableName
     dcrName: runbookLogsDcrName
     streamName: runbookLogsStreamName
-    tableColumns: runbookLogsTableColumns
-    dcrColumns: runbookLogsDcrColumns
+    columns: runbookLogsColumns
     servicePrincipalId: servicePrincipalId
     location: resourceGroup().location
   }

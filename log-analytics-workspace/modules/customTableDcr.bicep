@@ -10,11 +10,8 @@ param dcrName string
 @description('The name of the stream (e.g., Custom-RJAuditLogs_CL)')
 param streamName string
 
-@description('The columns for the custom table (Pascal case: DateTime, String, Dynamic)')
-param tableColumns array
-
-@description('The columns for the DCR stream (lowercase: datetime, string, dynamic)')
-param dcrColumns array
+@description('The columns for the custom table and DCR (Pascal case: DateTime, String, Dynamic)')
+param columns array
 
 @description('The service principal ID for role assignments')
 param servicePrincipalId string
@@ -24,6 +21,12 @@ param location string
 
 var monitoringMetricsPublisherRoleId = '3913510d-42f4-4e42-8a64-420c390055eb'
 var logsDestinationName = 'RJLogAnalyticsDestination'
+
+// Convert columns to lowercase for DCR (DCR API requires lowercase types)
+var dcrColumns = [for col in columns: {
+  name: col.name
+  type: toLower(col.type)
+}]
 
 // Reference existing workspace
 resource workspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
@@ -37,7 +40,7 @@ resource customTable 'Microsoft.OperationalInsights/workspaces/tables@2025-07-01
   properties: {
     schema: {
       name: tableName
-      columns: tableColumns
+      columns: columns
     }
   }
 }
