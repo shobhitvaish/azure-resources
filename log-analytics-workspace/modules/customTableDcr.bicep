@@ -22,6 +22,12 @@ param location string
 var monitoringMetricsPublisherRoleId = '3913510d-42f4-4e42-8a64-420c390055eb'
 var logsDestinationName = 'RJLogAnalyticsDestination'
 
+// Convert column types to lowercase for DCR stream (DateTime -> datetime, String -> string, etc.)
+var dcrColumns = [for col in columns: {
+  name: col.name
+  type: col.type == 'DateTime' ? 'datetime' : col.type == 'String' ? 'string' : col.type == 'Guid' ? 'guid' : col.type == 'Dynamic' ? 'dynamic' : col.type == 'Int' ? 'int' : col.type == 'Long' ? 'long' : col.type == 'Real' ? 'real' : col.type == 'Boolean' ? 'boolean' : col.type
+}]
+
 // Reference existing workspace
 resource workspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: workspaceName
@@ -50,7 +56,7 @@ resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' 
   properties: {
     streamDeclarations: {
       '${streamName}': {
-        columns: columns
+        columns: dcrColumns
       }
     }
     destinations: {

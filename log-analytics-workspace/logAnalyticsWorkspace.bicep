@@ -24,51 +24,51 @@ var runbookLogsDcrName = 'dcr-runbooklogs-${uniqueId}'
 
 // Audit Logs Schema
 var auditLogsColumns = [
-  { name: 'TimeGenerated', type: 'datetime' }
-  { name: 'Level', type: 'string' }
-  { name: 'Message', type: 'string' }
-  { name: 'Exception', type: 'string' }
-  { name: 'CustomerTenantId', type: 'string' }
-  { name: 'Category', type: 'string' }
-  { name: 'LogType', type: 'string' }
-  { name: 'Subject', type: 'dynamic' }
-  { name: 'Target', type: 'dynamic' }
-  { name: 'Change', type: 'dynamic' }
-  { name: 'Context', type: 'dynamic' }
-  { name: 'UserName', type: 'string' }
-  { name: 'UserId', type: 'string' }
-  { name: 'SourceContext', type: 'string' }
-  { name: 'RequestId', type: 'string' }
-  { name: 'EnvironmentName', type: 'string' }
-  { name: 'Diagnostics', type: 'dynamic' }
+  { name: 'TimeGenerated', type: 'DateTime' }
+  { name: 'Level', type: 'String' }
+  { name: 'Message', type: 'String' }
+  { name: 'Exception', type: 'String' }
+  { name: 'CustomerTenantId', type: 'String' }
+  { name: 'Category', type: 'String' }
+  { name: 'LogType', type: 'String' }
+  { name: 'Subject', type: 'Dynamic' }
+  { name: 'Target', type: 'Dynamic' }
+  { name: 'Change', type: 'Dynamic' }
+  { name: 'Context', type: 'Dynamic' }
+  { name: 'UserName', type: 'String' }
+  { name: 'UserId', type: 'String' }
+  { name: 'SourceContext', type: 'String' }
+  { name: 'RequestId', type: 'String' }
+  { name: 'EnvironmentName', type: 'String' }
+  { name: 'Diagnostics', type: 'Dynamic' }
 ]
 
 // Runbook Logs Schema
 var runbookLogsColumns = [
-  { name: 'TimeGenerated', type: 'datetime' }
-  { name: 'JobCreationTime', type: 'datetime' }
-  { name: 'JobEndTime', type: 'datetime' }
-  { name: 'JobException', type: 'string' }
-  { name: 'JobId', type: 'string' }
-  { name: 'JobJobId', type: 'guid' }
-  { name: 'JobLastModifiedTime', type: 'datetime' }
-  { name: 'JobLastStatusModifiedTime', type: 'datetime' }
-  { name: 'JobNameGuid', type: 'guid' }
-  { name: 'JobName', type: 'string' }
-  { name: 'JobOutput', type: 'string' }
-  { name: 'JobParametersJson', type: 'string' }
-  { name: 'JobPrettyCategory', type: 'string' }
-  { name: 'JobPrettyName', type: 'string' }
-  { name: 'JobPrettyType', type: 'string' }
-  { name: 'JobProvisioningState', type: 'string' }
-  { name: 'JobRunbookName', type: 'string' }
-  { name: 'JobRunOn', type: 'string' }
-  { name: 'JobStartedBy', type: 'string' }
-  { name: 'JobStartTime', type: 'datetime' }
-  { name: 'JobStatus', type: 'string' }
-  { name: 'JobStatusDetails', type: 'string' }
-  { name: 'JobStreamsJson', type: 'string' }
-  { name: 'JobType', type: 'string' }
+  { name: 'TimeGenerated', type: 'DateTime' }
+  { name: 'JobCreationTime', type: 'DateTime' }
+  { name: 'JobEndTime', type: 'DateTime' }
+  { name: 'JobException', type: 'String' }
+  { name: 'JobId', type: 'String' }
+  { name: 'JobJobId', type: 'Guid' }
+  { name: 'JobLastModifiedTime', type: 'DateTime' }
+  { name: 'JobLastStatusModifiedTime', type: 'DateTime' }
+  { name: 'JobNameGuid', type: 'Guid' }
+  { name: 'JobName', type: 'String' }
+  { name: 'JobOutput', type: 'String' }
+  { name: 'JobParametersJson', type: 'String' }
+  { name: 'JobPrettyCategory', type: 'String' }
+  { name: 'JobPrettyName', type: 'String' }
+  { name: 'JobPrettyType', type: 'String' }
+  { name: 'JobProvisioningState', type: 'String' }
+  { name: 'JobRunbookName', type: 'String' }
+  { name: 'JobRunOn', type: 'String' }
+  { name: 'JobStartedBy', type: 'String' }
+  { name: 'JobStartTime', type: 'DateTime' }
+  { name: 'JobStatus', type: 'String' }
+  { name: 'JobStatusDetails', type: 'String' }
+  { name: 'JobStreamsJson', type: 'String' }
+  { name: 'JobType', type: 'String' }
 ]
 
 // Log Analytics Workspace
