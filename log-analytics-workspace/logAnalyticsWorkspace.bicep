@@ -50,10 +50,10 @@ var runbookLogsColumns = [
   { name: 'JobEndTime', type: 'DateTime' }
   { name: 'JobException', type: 'String' }
   { name: 'JobId', type: 'String' }
-  { name: 'JobJobId', type: 'Guid' }
+  { name: 'JobJobId', type: 'String' }
   { name: 'JobLastModifiedTime', type: 'DateTime' }
   { name: 'JobLastStatusModifiedTime', type: 'DateTime' }
-  { name: 'JobNameGuid', type: 'Guid' }
+  { name: 'JobNameGuid', type: 'String' }
   { name: 'JobName', type: 'String' }
   { name: 'JobOutput', type: 'String' }
   { name: 'JobParametersJson', type: 'String' }
