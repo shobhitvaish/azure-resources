@@ -76,6 +76,9 @@ resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' 
       }
     ]
   }
+  dependsOn: [
+    customTable
+  ]
 }
 
 // Grant service principal permissions to DCR
