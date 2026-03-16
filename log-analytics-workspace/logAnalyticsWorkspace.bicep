@@ -127,10 +127,6 @@ var runbookLogsColumns = [
     type: 'DateTime'
   }
   {
-    name: 'JobNameGuid'
-    type: 'String'
-  }
-  {
     name: 'JobName'
     type: 'String'
   }
